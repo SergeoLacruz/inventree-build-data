@@ -25,7 +25,7 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
 
     SETTINGS = {
         'MY_PK': {
-            'name': 'PK of our company',
+            'name': 'Primary key of our company',
             'description': 'We put our own company into the database. So we can add addresses and contacts',
             'model': 'company.company',
         },
@@ -130,9 +130,9 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
             except Exception:
                 print('error sample_approval')
 
-            has_permission = (check_user_role(view.request.user, 'build_order', 'change')
-                              or check_user_role(view.request.user, 'build_order', 'delete')
-                              or check_user_role(view.request.user, 'build_order', 'add'))
+            has_permission = (check_user_role(view.request.user, 'build', 'change')
+                              or check_user_role(view.request.user, 'build', 'delete')
+                              or check_user_role(view.request.user, 'build', 'add'))
             if has_permission:
                 panels.append({
                     'title': 'Manufacturig Info',
