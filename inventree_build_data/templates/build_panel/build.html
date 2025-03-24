@@ -9,7 +9,8 @@ async function SelectCompany(){
         boards_in_panel: parseInt(document.getElementById("boards_in_panel").value),
         material_provisioning: document.getElementById("material_provisioning").value,
         sample_approval: document.getElementById("sample_approval").value,
-        ems_contact_pk: parseInt(document.getElementById("ems_contact_field").value)
+        ems_contact_pk: parseInt(document.getElementById("ems_contact_field").value),
+	build_pk : {{build.pk}}
     }
     response = inventreeFormDataUpload(url=cmd_url, data=JSON.stringify(data))
 }

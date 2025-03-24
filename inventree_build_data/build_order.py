@@ -2,6 +2,7 @@ from django.urls import re_path
 from django.http import HttpResponse
 
 from build.views import BuildDetail
+from build.models import Build
 from plugin import InvenTreePlugin
 from plugin.mixins import PanelMixin, SettingsMixin, UrlsMixin, ReportMixin
 from company.models import Company, Contact
@@ -19,13 +20,13 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
     SLUG = "buildorderdata"
     TITLE = "Additional data for build orders"
     AUTHOR = "Michael"
-    PUBLISH_DATE = "2023-11-11:00:00"
+    PUBLISH_DATE = "2025-03-24:00:00"
     DESCRIPTION = "This plugin adds data for external manufacturing to a build order"
     VERSION = PLUGIN_VERSION
 
     SETTINGS = {
         'MY_PK': {
-            'name': 'Primary key of our company',
+            'name': 'PK of our company',
             'description': 'We put our own company into the database. So we can add addresses and contacts',
             'model': 'company.company',
         },
@@ -68,14 +69,14 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
         panels = []
         parameters = ['PARAMETER_WIDTH', 'PARAMETER_LENGTH', 'PARAMETER_LAYNO', 'PARAMETER_DUAL']
         if isinstance(view, BuildDetail):
-            self.build = view.get_object()
+            build = view.get_object()
             self.companies = Company.objects.filter(is_supplier=True)
             self.contacts = Contact.objects.filter()
 
             # Grab PCB data from the PCB parameters
             self.build_data = {}
             try:
-                related_pcb = list(self.build.part.get_related_parts())[0]
+                related_pcb = list(build.part.get_related_parts())[0]
             except Exception:
                 related_pcb = None
             if related_pcb is not None:
@@ -98,35 +99,35 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
             self.customer_company = Company.objects.get(pk=customer_pk)
             self.all_customer_contacts = Contact.objects.filter(company=customer_pk)
 
-            # Select the attachments
-            for p in self.build.attachments.all():
+            # Select the attachments. Wo dont do anything with them so far.
+            for p in build.attachments.all():
                 print('Name:', p.comment)
                 print('Name:', p.attachment)
 
             # Calculate the total number of components on the board
             self.build_data['total_components'] = 0
-            for p in self.build.part.bom_items.all():
+            for p in build.part.bom_items.all():
                 self.build_data['total_components'] = self.build_data['total_components'] + p.quantity
 
             # Grab metadata if exist and put it into the build_data dict
             try:
-                self.build_data['ems_company'] = Company.objects.get(pk=self.build.metadata['ems_company_pk'])
+                self.build_data['ems_company'] = Company.objects.get(pk=build.metadata['ems_company_pk'])
             except Exception:
                 print('error ems_company_pk')
             try:
-                self.build_data['ems_contact'] = Contact.objects.get(pk=self.build.metadata['ems_contact_pk'])
+                self.build_data['ems_contact'] = Contact.objects.get(pk=build.metadata['ems_contact_pk'])
             except Exception:
                 print('error ems_contact_pk')
             try:
-                self.build_data['customer_contact'] = Contact.objects.get(pk=self.build.metadata['customer_contact'])
+                self.build_data['customer_contact'] = Contact.objects.get(pk=build.metadata['customer_contact'])
             except Exception:
                 print('error customer_contact')
             try:
-                self.build_data['material_provisioning'] = self.build.metadata['material_provisioning']
+                self.build_data['material_provisioning'] = build.metadata['material_provisioning']
             except Exception:
                 print('error material_provisioning')
             try:
-                self.build_data['sample_approval'] = self.build.metadata['sample_approval']
+                self.build_data['sample_approval'] = build.metadata['sample_approval']
             except Exception:
                 print('error sample_approval')
 
@@ -147,21 +148,24 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
 # ------------------------- Helper functions ------------------------------------
     def process_data(self, request):
 
+        self.build_data = {}
         data = json.loads(request.body)
-        if self.build.metadata is None:
-            self.build.metadata = {}
+        build = Build.objects.get(pk=data['build_pk'])
+
+        if build.metadata is None:
+            build.metadata = {}
         for key in data:
             print(key, data[key])
-            self.build.metadata[key] = data[key]
-        self.build.save()
-        self.build_data['ems_company'] = Company.objects.get(pk=self.build.metadata['ems_company_pk'])
+            build.metadata[key] = data[key]
+        build.save()
+        self.build_data['ems_company'] = Company.objects.get(pk=build.metadata['ems_company_pk'])
         try:
-            self.build_data['ems_contact'] = Contact.objects.get(pk=self.build.metadata['ems_contact_pk'])
+            self.build_data['ems_contact'] = Contact.objects.get(pk=build.metadata['ems_contact_pk'])
         except Exception:
             pass
-        self.build_data['customer_contact'] = Contact.objects.get(pk=self.build.metadata['customer_contact'])
-        self.build_data['material_provisioning'] = self.build.metadata['material_provisioning']
-        self.build_data['sample_approval'] = self.build.metadata['sample_approval']
+        self.build_data['customer_contact'] = Contact.objects.get(pk=build.metadata['customer_contact'])
+        self.build_data['material_provisioning'] = build.metadata['material_provisioning']
+        self.build_data['sample_approval'] = build.metadata['sample_approval']
         return HttpResponse('OK')
 
 # -------------------- Add context data for report generation -------------------
