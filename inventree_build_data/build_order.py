@@ -20,7 +20,7 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
     SLUG = "buildorderdata"
     TITLE = "Additional data for build orders"
     AUTHOR = "Michael"
-    PUBLISH_DATE = "2025-03-24:00:00"
+    PUBLISH_DATE = "2025-03-26:00:00"
     DESCRIPTION = "This plugin adds data for external manufacturing to a build order"
     VERSION = PLUGIN_VERSION
 
@@ -155,7 +155,6 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
         if build.metadata is None:
             build.metadata = {}
         for key in data:
-            print(key, data[key])
             build.metadata[key] = data[key]
         build.save()
         self.build_data['ems_company'] = Company.objects.get(pk=build.metadata['ems_company_pk'])
@@ -171,9 +170,38 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
 # -------------------- Add context data for report generation -------------------
     def add_report_context(self, report_instance, model_instance, request, context):
 
-        # print('report_instance', report_instance)
-        # print('request', request)
-        # print('context', context)
-        # print('model_instance', model_instance)
+        parameters = ['PARAMETER_WIDTH', 'PARAMETER_LENGTH', 'PARAMETER_LAYNO', 'PARAMETER_DUAL']
+        self.build_data = {}
 
+        # Get the parameters from the related PCB
+        try:
+            related_pcb = list(model_instance.part.get_related_parts())[0]
+        except Exception:
+            related_pcb = None
+        if related_pcb is not None:
+            self.build_data['pcb_name'] = related_pcb.IPN
+            for parameter in related_pcb.parameters.all():
+                for par in parameters:
+                    try:
+                        if parameter.template.pk == int(self.get_setting(par)):
+                            self.build_data[par] = parameter.data
+                    except Exception:
+                        self.build_data[par] = 'Parameter pk not defined'
+        else:
+            self.build_data['pcb_name'] = 'No related PCB found'
+
+        # Calculate the total number of components on the board
+        self.build_data['total_components'] = 0
+        for p in model_instance.part.bom_items.all():
+            self.build_data['total_components'] = self.build_data['total_components'] + p.quantity
+
+        # Get additional parameters from the metadata
+        self.build_data['ems_company'] = Company.objects.get(pk=model_instance.metadata['ems_company_pk'])
+        try:
+            self.build_data['ems_contact'] = Contact.objects.get(pk=model_instance.metadata['ems_contact_pk'])
+        except Exception:
+            pass
+        self.build_data['customer_contact'] = Contact.objects.get(pk=model_instance.metadata['customer_contact'])
+        self.build_data['material_provisioning'] = model_instance.metadata['material_provisioning']
+        self.build_data['sample_approval'] = model_instance.metadata['sample_approval']
         context['build_plugin'] = self
