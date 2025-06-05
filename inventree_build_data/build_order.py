@@ -20,7 +20,7 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
     SLUG = "buildorderdata"
     TITLE = "Additional data for build orders"
     AUTHOR = "Michael"
-    PUBLISH_DATE = "2025-03-26:00:00"
+    PUBLISH_DATE = "2025-06-05:00:00"
     DESCRIPTION = "This plugin adds data for external manufacturing to a build order"
     VERSION = PLUGIN_VERSION
 
@@ -204,4 +204,6 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
         self.build_data['customer_contact'] = Contact.objects.get(pk=model_instance.metadata['customer_contact'])
         self.build_data['material_provisioning'] = model_instance.metadata['material_provisioning']
         self.build_data['sample_approval'] = model_instance.metadata['sample_approval']
+        customer_pk = int(self.get_setting('MY_PK'))
+        self.customer_company = Company.objects.get(pk=customer_pk)
         context['build_plugin'] = self
