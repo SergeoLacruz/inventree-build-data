@@ -30,4 +30,9 @@ setuptools.setup(
         ]
     },
     include_package_data=True,
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "Operating System :: OS Independent",
+        "Framework :: InvenTree",
+    ],
 )
