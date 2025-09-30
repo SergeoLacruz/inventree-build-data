@@ -173,6 +173,10 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
         parameters = ['PARAMETER_WIDTH', 'PARAMETER_LENGTH', 'PARAMETER_LAYNO', 'PARAMETER_DUAL']
         self.build_data = {}
 
+        # Do nothing if we are not in Buildorder Context
+        if report_instance.model_type != 'build':
+            return
+
         # Get the parameters from the related PCB
         try:
             related_pcb = list(model_instance.part.get_related_parts())[0]
