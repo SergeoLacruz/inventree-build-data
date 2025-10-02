@@ -20,7 +20,7 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
     SLUG = "buildorderdata"
     TITLE = "Additional data for build orders"
     AUTHOR = "Michael"
-    PUBLISH_DATE = "2025-06-05:00:00"
+    PUBLISH_DATE = "2025-10-01:00:00"
     DESCRIPTION = "This plugin adds data for external manufacturing to a build order"
     VERSION = PLUGIN_VERSION
 
