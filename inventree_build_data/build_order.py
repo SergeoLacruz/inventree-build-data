@@ -20,7 +20,7 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
     SLUG = "buildorderdata"
     TITLE = "Additional data for build orders"
     AUTHOR = "Michael"
-    PUBLISH_DATE = "2025-10-01:00:00"
+    PUBLISH_DATE = "2026-08-03:00:00"
     DESCRIPTION = "This plugin adds data for external manufacturing to a build order"
     VERSION = PLUGIN_VERSION
 
@@ -157,14 +157,6 @@ class BuildOrderData(PanelMixin, SettingsMixin, InvenTreePlugin, UrlsMixin, Repo
         for key in data:
             build.metadata[key] = data[key]
         build.save()
-        self.build_data['ems_company'] = Company.objects.get(pk=build.metadata['ems_company_pk'])
-        try:
-            self.build_data['ems_contact'] = Contact.objects.get(pk=build.metadata['ems_contact_pk'])
-        except Exception:
-            pass
-        self.build_data['customer_contact'] = Contact.objects.get(pk=build.metadata['customer_contact'])
-        self.build_data['material_provisioning'] = build.metadata['material_provisioning']
-        self.build_data['sample_approval'] = build.metadata['sample_approval']
         return HttpResponse('OK')
 
 # -------------------- Add context data for report generation -------------------
